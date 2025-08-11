@@ -1,4 +1,5 @@
 gpd_ros2_msgs/CloudIndexed cloud_indexed
+gpd_ros2_msgs/GraspParams grasp_params
 
 ---
 gpd_ros2_msgs/GraspConfigList grasp_configs
