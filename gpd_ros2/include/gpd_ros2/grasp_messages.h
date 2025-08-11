@@ -40,6 +40,10 @@
 
 #include <gpd_ros2_msgs/msg/grasp_config.hpp>
 #include <gpd_ros2_msgs/msg/grasp_config_list.hpp>
+#include <gpd_ros2_msgs/msg/grasp_params.hpp>
+#include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
+#include <gpd/grasp_detector.h>
 
 inline geometry_msgs::msg::Vector3 toVector3(const Eigen::Vector3d& v) {
   geometry_msgs::msg::Vector3 msg;
@@ -62,6 +66,15 @@ namespace GraspMessages
   gpd_ros2_msgs::msg::GraspConfigList createGraspListMsg(const std::vector<std::unique_ptr<gpd::candidate::Hand>>& hands, const std_msgs::msg::Header& header);
 
   gpd_ros2_msgs::msg::GraspConfig convertToGraspMsg(const gpd::candidate::Hand& hand);
-};
+
+  /**
+   * @brief Convert ROS 2 grasp parameters message to GPD detect parameters.
+   * 
+   * @param m Grasp parameters message.
+   * @return DetectParams Struct containing the converted parameters.
+   */
+  gpd::DetectParams convertGraspParamsToDetectParams(const gpd_ros2_msgs::msg::GraspParams &m);
+}  // namespace GraspMessages
+
 
 #endif /* GRASP_MESSAGES_H_ */
