@@ -15,6 +15,10 @@ find_package(gpd_ros2_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(pcl_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(pcl_ros REQUIRED)
 
 # PCL
 find_package(PCL 1.9 REQUIRED)
@@ -52,16 +56,21 @@ ament_export_include_directories(
 
 add_library(${PROJECT_NAME}_grasp_messages src/${PROJECT_NAME}/grasp_messages.cpp)
 ament_target_dependencies(${PROJECT_NAME}_grasp_messages
-  rclcpp
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-  gpd_ros2_msgs
-  tf2
-  tf2_eigen
-  tf2_geometry_msgs
+  rclcpp  std_msgs  sensor_msgs  geometry_msgs  gpd_ros2_msgs  tf2  tf2_eigen  tf2_geometry_msgs
 )
 target_link_libraries(${PROJECT_NAME}_grasp_messages ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${GPD_LIB})
+
+add_library(${PROJECT_NAME}_grasp_plotter src/${PROJECT_NAME}/grasp_plotter.cpp)
+ament_target_dependencies(${PROJECT_NAME}_grasp_plotter
+  rclcpp  std_msgs  sensor_msgs  geometry_msgs  gpd_ros2_msgs  tf2  tf2_eigen  tf2_geometry_msgs  visualization_msgs
+)
+target_link_libraries(${PROJECT_NAME}_grasp_plotter ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${GPD_LIB})
+
+add_executable(${PROJECT_NAME}_detect_grasps_server src/${PROJECT_NAME}/grasp_detection_server.cpp)
+ament_target_dependencies(${PROJECT_NAME}_detect_grasps_server
+  rclcpp  std_msgs  sensor_msgs  geometry_msgs  gpd_ros2_msgs  tf2  tf2_eigen  tf2_geometry_msgs visualization_msgs pcl_conversions pcl_ros pcl_msgs
+)
+target_link_libraries(${PROJECT_NAME}_detect_grasps_server ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${GPD_LIB} ${PROJECT_NAME}_grasp_messages ${PROJECT_NAME}_grasp_plotter)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
