@@ -1,6 +1,9 @@
 #include <gpd_ros2/grasp_messages.h>
+#include <Eigen/Geometry>
 
-gpd_ros2_msgs::msg::GraspConfigList GraspMessages::createGraspListMsg(const std::vector<std::unique_ptr<gpd::candidate::Hand>>& hands, const std_msgs::msg::Header& header)
+namespace GraspMessages {
+
+gpd_ros2_msgs::msg::GraspConfigList createGraspListMsg(const std::vector<std::unique_ptr<gpd::candidate::Hand>>& hands, const std_msgs::msg::Header& header)
 {
   gpd_ros2_msgs::msg::GraspConfigList msg;
 
@@ -13,7 +16,7 @@ gpd_ros2_msgs::msg::GraspConfigList GraspMessages::createGraspListMsg(const std:
   return msg;
 }
 
-gpd_ros2_msgs::msg::GraspConfig GraspMessages::convertToGraspMsg(const gpd::candidate::Hand& hand)
+gpd_ros2_msgs::msg::GraspConfig convertToGraspMsg(const gpd::candidate::Hand& hand)
 {
   gpd_ros2_msgs::msg::GraspConfig msg;
   msg.position = toPoint(hand.getPosition());
@@ -26,9 +29,6 @@ gpd_ros2_msgs::msg::GraspConfig GraspMessages::convertToGraspMsg(const gpd::cand
 
   return msg;
 }
-
-#include <Eigen/Geometry>
-#include "gpd_ros2_msgs/msg/grasp_params.hpp"
 
 gpd::DetectParams convertGraspParamsToDetectParams(const gpd_ros2_msgs::msg::GraspParams &m) {
   gpd::DetectParams d;
@@ -51,4 +51,6 @@ gpd::DetectParams convertGraspParamsToDetectParams(const gpd_ros2_msgs::msg::Gra
   d.thresh_rad = m.approach_dir_threshold;
   return d;
 }
+
+}  // namespace GraspMessages
 

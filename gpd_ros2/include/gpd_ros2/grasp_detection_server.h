@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2018, Andreas ten Pas
+ *  Copyright (c) 2018, Andreas ten Pas Ported to ROS2 by Rohit Menon
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,23 +33,35 @@
 #ifndef GRASP_DETECTION_SERVER_H_
 #define GRASP_DETECTION_SERVER_H_
 
+#include <memory>
+#include <string>
+#include <vector>
+#include <ctime>
 
-// ROS2
-#include <pcl_conversions/pcl_conversions.h>
-#include <rclcpp/rclcpp.hpp>
-#include <visualization_msgs/msg/marker.hpp>
-#include <visualization_msgs/msg/marker_array.hpp>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 // GPD
 #include <gpd/util/cloud.h>
 #include <gpd/grasp_detector.h>
+#include <gpd/candidate/hand.h>
 
-// this project (services)
-#include <gpd_ros2_msgs/srv/detect_grasps.h>
+// ROS2
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <std_msgs/msg/header.hpp>
+#include <pcl_conversions/pcl_conversions.h>
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
-// this project (messages)
-#include <gpd_ros2_msgs/msg/grasp_config.h>
-#include <gpd_ros2_msgs/msg/grasp_config_list.h>
+
+// gpd_ros2_msgs (services and messages)
+#include <gpd_ros2_msgs/srv/detect_grasps.hpp>
+#include <gpd_ros2_msgs/msg/grasp_config_list.hpp>
+#include <gpd_ros2_msgs/msg/cloud_indexed.hpp>
+#include <gpd_ros2_msgs/msg/cloud_sources.hpp>
+#include <gpd_ros2_msgs/msg/grasp_params.hpp>
+
 
 // this project (headers)
 #include <gpd_ros2/grasp_messages.h>
@@ -58,32 +70,25 @@
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
 typedef pcl::PointCloud<pcl::PointNormal> PointCloudPointNormal;
 
+namespace gpd_ros2
+{
 
-class GraspDetectionServer
+class GraspDetectionServer : public rclcpp::Node
 {
 public:
   /**
    * \brief Constructor.
    * \param node the ROS2 node shared pointer
    */
-  GraspDetectionServer(const rclcpp::Node::SharedPtr& node);
-
-  /**
-   * \brief Destructor.
-   */
-  ~GraspDetectionServer();
-
-  /**
-   * \brief Service callback for detecting grasps.
-   * \param req the service request
-   * \param res the service response
-   */
-  void detectGrasps(
-    const std::shared_ptr<gpd_ros2_msgs::srv::DetectGrasps::Request> request,
-    std::shared_ptr<gpd_ros2_msgs::srv::DetectGrasps::Response> response);
+  explicit GraspDetectionServer(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 
 private:
-  rclcpp::Node::SharedPtr node_;
+  using DetectGrasps = gpd_ros2_msgs::srv::DetectGrasps;
+  using Request = std::shared_ptr<DetectGrasps::Request>;
+  using Response = std::shared_ptr<DetectGrasps::Response>;
+
+  void handleRequest(const Request request, Response response);
+
   rclcpp::Publisher<gpd_ros2_msgs::msg::GraspConfigList>::SharedPtr grasps_pub_; ///< ROS2 publisher for grasp list messages
 
   std_msgs::msg::Header cloud_camera_header_; ///< stores header of the point cloud
@@ -91,11 +96,14 @@ private:
 
   std::unique_ptr<gpd::GraspDetector> grasp_detector_; ///< used to run the grasp pose detection
   std::unique_ptr<gpd::util::Cloud> cloud_camera_; ///< stores point cloud with (optional) camera information and surface normals
-  //std::unique_ptr<GraspPlotter> rviz_plotter_; ///< used to plot detected grasps in rviz
+  //std::unique_ptr<gpd_ros2::GraspPlotter> rviz_plotter_; ///< used to plot detected grasps in rviz
+
 
   bool use_rviz_; ///< if rviz is used for visualization instead of PCL
   std::vector<double> workspace_; ///< workspace limits
   Eigen::Vector3d view_point_; ///< (input) view point of the camera onto the point cloud
 };
+
+}  // namespace gpd_ros2
 
 #endif /* GRASP_DETECTION_SERVER_H_ */
