@@ -1,5 +1,8 @@
 gpd_ros2_msgs/CloudIndexed cloud_indexed
-gpd_ros2_msgs/GraspParams grasp_params
+gpd_ros2_msgs/GraspParams  grasp_params
+uint8 params_policy
+uint8 USE_CFG_FILE=0         # Ignore grasp_params; use server config
+uint8 USE_REQUEST_PARAMS=1  # Use grasp_params entirely
 
 ---
 gpd_ros2_msgs/GraspConfigList grasp_configs
