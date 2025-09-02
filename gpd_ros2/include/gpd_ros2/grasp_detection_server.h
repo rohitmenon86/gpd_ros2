@@ -56,7 +56,7 @@
 
 
 // gpd_ros2_msgs (services and messages)
-#include <gpd_ros2_msgs/srv/detect_grasps.hpp>
+#include <gpd_ros2_msgs/srv/detect_constrained_grasps.hpp>
 #include <gpd_ros2_msgs/msg/grasp_config_list.hpp>
 #include <gpd_ros2_msgs/msg/cloud_indexed.hpp>
 #include <gpd_ros2_msgs/msg/cloud_sources.hpp>
@@ -83,9 +83,9 @@ public:
   explicit GraspDetectionServer(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 
 private:
-  using DetectGrasps = gpd_ros2_msgs::srv::DetectGrasps;
-  using Request = std::shared_ptr<DetectGrasps::Request>;
-  using Response = std::shared_ptr<DetectGrasps::Response>;
+  using DetectConstrainedGrasps = gpd_ros2_msgs::srv::DetectConstrainedGrasps;
+  using Request = std::shared_ptr<DetectConstrainedGrasps::Request>;
+  using Response = std::shared_ptr<DetectConstrainedGrasps::Response>;
 
   void handleRequest(const Request request, Response response);
 

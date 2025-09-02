@@ -44,11 +44,11 @@ GraspDetectionServer::GraspDetectionServer(const rclcpp::NodeOptions &options)
 
   
     // Service
-  auto cb = [this](const std::shared_ptr<DetectGrasps::Request> req,
-                   std::shared_ptr<DetectGrasps::Response> res) {
+  auto cb = [this](const std::shared_ptr<DetectConstrainedGrasps::Request> req,
+                   std::shared_ptr<DetectConstrainedGrasps::Response> res) {
     this->handleRequest(req, res);
   };
-  this->create_service<DetectGrasps>("detect_grasps", cb);
+  this->create_service<DetectConstrainedGrasps>("detect_constrained_grasps", cb);
 
   RCLCPP_INFO(get_logger(), "Grasp detection service is ready.");
 }
@@ -104,9 +104,9 @@ void GraspDetectionServer::handleRequest(const Request req, Response res)
 
   grasp_detector_->preprocessPointCloud(*cloud_camera_);
   std::vector<std::unique_ptr<gpd::candidate::Hand>> grasps;
-  if (req->params_policy == gpd_ros2_msgs::srv::DetectGrasps::Request::USE_CFG_FILE) {
+  if (req->params_policy == gpd_ros2_msgs::srv::DetectConstrainedGrasps::Request::USE_CFG_FILE) {
     grasps = grasp_detector_->detectGrasps(*cloud_camera_);
-  } else if (req->params_policy == gpd_ros2_msgs::srv::DetectGrasps::Request::USE_REQUEST_PARAMS) {
+  } else if (req->params_policy == gpd_ros2_msgs::srv::DetectConstrainedGrasps::Request::USE_REQUEST_PARAMS) {
     gpd::DetectParams detect_params = GraspMessages::convertGraspParamsToDetectParams(req->grasp_params);
     grasps = grasp_detector_->detectGrasps(*cloud_camera_, detect_params);
   } else {
