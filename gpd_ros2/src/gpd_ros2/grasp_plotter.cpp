@@ -15,6 +15,9 @@
 
 #include <gpd_ros2/grasp_plotter.h>  // header you ported earlier
 
+namespace gpd_ros2
+{
+
 GraspPlotter::GraspPlotter(const rclcpp::Node::SharedPtr& node,
                            const gpd::candidate::HandGeometry& params)
 : node_(node)
@@ -156,3 +159,4 @@ GraspPlotter::createHandBaseMarker(const Eigen::Vector3d& start,
 
   return marker;
 }
+}  // namespace gpd_ros2

@@ -90,13 +90,14 @@ private:
   void handleRequest(const Request request, Response response);
 
   rclcpp::Publisher<gpd_ros2_msgs::msg::GraspConfigList>::SharedPtr grasps_pub_; ///< ROS2 publisher for grasp list messages
+  rclcpp::Service<DetectConstrainedGrasps>::SharedPtr service_; ///< ROS2 service server
 
   std_msgs::msg::Header cloud_camera_header_; ///< stores header of the point cloud
   std::string frame_; ///< point cloud frame
 
   std::unique_ptr<gpd::GraspDetector> grasp_detector_; ///< used to run the grasp pose detection
   std::unique_ptr<gpd::util::Cloud> cloud_camera_; ///< stores point cloud with (optional) camera information and surface normals
-  //std::unique_ptr<gpd_ros2::GraspPlotter> rviz_plotter_; ///< used to plot detected grasps in rviz
+  std::unique_ptr<gpd_ros2::GraspPlotter> rviz_plotter_; ///< used to plot detected grasps in rviz
 
 
   bool use_rviz_; ///< if rviz is used for visualization instead of PCL

@@ -72,6 +72,21 @@ ament_target_dependencies(${PROJECT_NAME}_detect_grasps_server
 )
 target_link_libraries(${PROJECT_NAME}_detect_grasps_server ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${GPD_LIB} ${PROJECT_NAME}_grasp_messages ${PROJECT_NAME}_grasp_plotter)
 
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+install(DIRECTORY
+  cfg
+  DESTINATION share/${PROJECT_NAME}
+)
+install(TARGETS
+  ${PROJECT_NAME}_detect_grasps_server
+  ${PROJECT_NAME}_grasp_messages
+  ${PROJECT_NAME}_grasp_plotter
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

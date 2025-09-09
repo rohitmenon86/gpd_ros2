@@ -29,6 +29,13 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
+install(PROGRAMS
+  scripts/snapshot_bagger_windowed.py
+  scripts/on_demand_bagger.py
+  scripts/gpd_ros2_interface/gpd_constrained_client.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # if(BUILD_TESTING)
 #   find_package(ament_lint_auto REQUIRED)
 #   # the following line skips the linter which checks for copyrights

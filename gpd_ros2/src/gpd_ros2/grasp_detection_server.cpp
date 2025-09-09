@@ -12,14 +12,15 @@ GraspDetectionServer::GraspDetectionServer(const rclcpp::NodeOptions &options)
   : rclcpp::Node("grasp_detection_server", options)
 {
   declare_parameter<std::vector<double>>("camera_position", {0.0, 0.0, 0.0});
-  declare_parameter<std::string>("config_file", std::string(""));
-  declare_parameter<std::string>("rviz_topic", std::string(""));
+  declare_parameter<std::string>("config_file", std::string("/home/ws/ros2_ws/install/gpd_ros2/share/gpd_ros2/cfg/cfg/ros_eigen_params.cfg"));
+  declare_parameter<std::string>("rviz_topic", std::string("/grasps_rviz"));
   declare_parameter<std::vector<double>>("workspace", {-10.0, -10.0, -10.0, 10.0, 10.0, 10.0});
 
   auto camera_position = get_parameter("camera_position").as_double_array();
   view_point_ << camera_position[0], camera_position[1], camera_position[2];
 
   auto cfg_file = get_parameter("config_file").as_string();
+  grasp_detector_.reset();
   try
   {
     grasp_detector_ = std::make_unique<gpd::GraspDetector>(cfg_file);
@@ -30,25 +31,38 @@ GraspDetectionServer::GraspDetectionServer(const rclcpp::NodeOptions &options)
     throw;
   }
   
-  // auto rviz_topic = get_parameter("rviz_topic").as_string();
-  // if (!rviz_topic.empty()) {
-  //   rviz_plotter_ = std::make_unique<GraspPlotter>(
-  //     shared_from_this(), grasp_detector_->getHandSearchParameters().hand_geometry_);
-  //   use_rviz_ = true;
-  // } else {
-  //   use_rviz_ = false;
-  // }
+  auto rviz_topic = get_parameter("rviz_topic").as_string();
+  if (!rviz_topic.empty()) {
+    try
+    {
+      rviz_plotter_ = std::make_unique<GraspPlotter>(
+      shared_from_this(), grasp_detector_->getHandSearchParameters().hand_geometry_);
+      use_rviz_ = true;
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      RCLCPP_ERROR(this->get_logger(), "Failed to initialize GraspPlotter: %s", e.what());
+      use_rviz_ = false;
+    }
+    
+    
+  } else {
+    use_rviz_ = false;
+  }
 
 
   grasps_pub_ = create_publisher<gpd_ros2_msgs::msg::GraspConfigList>("clustered_grasps", 10);
+  
 
   
     // Service
   auto cb = [this](const std::shared_ptr<DetectConstrainedGrasps::Request> req,
                    std::shared_ptr<DetectConstrainedGrasps::Response> res) {
+    RCLCPP_INFO(get_logger(), "===========DetectConstrainedGrasps service called.===========");          
     this->handleRequest(req, res);
   };
-  this->create_service<DetectConstrainedGrasps>("detect_constrained_grasps", cb);
+  service_ = this->create_service<DetectConstrainedGrasps>("detect_constrained_grasps", cb);
 
   RCLCPP_INFO(get_logger(), "Grasp detection service is ready.");
 }
@@ -65,7 +79,7 @@ void GraspDetectionServer::handleRequest(const Request req, Response res)
   {
     view_points.col(i) << cloud_sources.view_points[i].x, cloud_sources.view_points[i].y, cloud_sources.view_points[i].z;
   }
-
+  RCLCPP_INFO(get_logger(), "Added viewpoints ...");
   cloud_camera_header_ = cloud_sources.cloud.header;
   frame_ = cloud_camera_header_.frame_id;
 
@@ -78,7 +92,10 @@ void GraspDetectionServer::handleRequest(const Request req, Response res)
     for (size_t i = 0; i < cloud_sources.camera_source.size(); ++i)
       camera_source(cloud_sources.camera_source[i].data, static_cast<int>(i)) = 1;
 
+    RCLCPP_INFO(get_logger(), "Added camera sources ...");
     cloud_camera_ = std::make_unique<gpd::util::Cloud>(cloud, camera_source, view_points);
+    RCLCPP_INFO(get_logger(), "Created gpd::util::Cloud ...");
+    std::cout << "view_points:\n" << view_points << "\n";
   } 
   else 
   {
@@ -103,10 +120,13 @@ void GraspDetectionServer::handleRequest(const Request req, Response res)
               cloud_camera_->getCloudProcessed()->size(), req->cloud_indexed.indices.size());
 
   grasp_detector_->preprocessPointCloud(*cloud_camera_);
+  RCLCPP_INFO(get_logger(), "Preprocessed point cloud ...");
   std::vector<std::unique_ptr<gpd::candidate::Hand>> grasps;
   if (req->params_policy == gpd_ros2_msgs::srv::DetectConstrainedGrasps::Request::USE_CFG_FILE) {
+    RCLCPP_INFO(get_logger(), "Using cfg file ...");
     grasps = grasp_detector_->detectGrasps(*cloud_camera_);
   } else if (req->params_policy == gpd_ros2_msgs::srv::DetectConstrainedGrasps::Request::USE_REQUEST_PARAMS) {
+    RCLCPP_INFO(get_logger(), "Using request parameters ...");
     gpd::DetectParams detect_params = GraspMessages::convertGraspParamsToDetectParams(req->grasp_params);
     grasps = grasp_detector_->detectGrasps(*cloud_camera_, detect_params);
   } else {
@@ -118,13 +138,17 @@ void GraspDetectionServer::handleRequest(const Request req, Response res)
     return;
   }
   if (!grasps.empty()) {
-    //if (use_rviz_) rviz_plotter_->drawGrasps(grasps, frame_);
+    if (use_rviz_) rviz_plotter_->drawGrasps(grasps, frame_);
 
     auto msg = GraspMessages::createGraspListMsg(grasps, cloud_camera_header_);
     res->grasp_configs = msg;
-    //grasps_pub_->publish(msg);
+    grasps_pub_->publish(msg);
 
     RCLCPP_INFO(get_logger(), "Detected %zu highest-scoring grasps.", msg.grasps.size());
+    for (size_t i = 0; i < msg.grasps.size(); ++i) {
+      RCLCPP_INFO(get_logger(), "Grasp %zu: score %f", i, msg.grasps[i].score.data);
+    }
+    RCLCPP_INFO(get_logger(), "=====================Finished service request.==================");
     return;
   }
 

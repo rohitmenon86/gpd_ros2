@@ -25,6 +25,9 @@
 /**
  * @brief Draw grasps in RViz (ROS 2).
  */
+
+namespace gpd_ros2
+{
 class GraspPlotter
 {
 public:
@@ -97,5 +100,7 @@ private:
   double finger_width_{0.0};
   double hand_height_{0.0};
 };
+
+}  // namespace gpd_ros2
 
 #endif  // GRASP_PLOTTER_HPP_
